@@ -13,19 +13,20 @@
 #include <unistd.h>
 
 #define SERVER_PORT 80 
+#define BUFFER_SIZE 30000
 
 int main()
 {
 	int listen_sd, comm_sd, portno;
 	long valread; 
-	char buff[2048];
+	char buff[BUFFER_SIZE];
 
     /* Reading from config.txt */
     FILE *config_data;
 	config_data = fopen("config.txt", "r");
-	char *tok,html_files[1024]="",string_config_data[1024];
-	bzero(string_config_data,1024);
-	fgets(string_config_data,1024,config_data);
+	char *tok,html_files[BUFFER_SIZE]="",string_config_data[BUFFER_SIZE];
+	bzero(string_config_data,BUFFER_SIZE);
+	fgets(string_config_data,BUFFER_SIZE,config_data);
 	tok = strtok(string_config_data," ");
 	tok = strtok(NULL," ");
 	for(int i=0; tok != NULL ; i++) 
@@ -42,16 +43,16 @@ int main()
     }
     printf("Port Number: %d\n",portno);
     printf("Files: %s\n",html_files);
-    char temp_html_files[1024];
+    char temp_html_files[BUFFER_SIZE];
     strcpy(temp_html_files,html_files);
 
     /* Creating our HTML file by attaching suitable header */
 	FILE *html_data;
 	html_data = fopen("index.html","r");
-	char string_html[1024];
-	char html_header[2048] = "HTTP1.1 200 OK\r\n\r\n";
-	bzero(string_html,1024);
-	fgets(string_html,1024,html_data);
+	char string_html[BUFFER_SIZE];
+	char html_header[BUFFER_SIZE] = "HTTP1.1 200 OK\r\n\r\n";
+	bzero(string_html,BUFFER_SIZE);
+	fgets(string_html,BUFFER_SIZE,html_data);
 	strcat(html_header,string_html);
 
     /* Socket Programming */
@@ -62,7 +63,7 @@ int main()
 	servaddr.sin_port = htons(portno);
 	servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 	bind(listen_sd,(struct sockaddr*)&servaddr,sizeof(servaddr));
-	listen(listen_sd,1024); 
+	listen(listen_sd,BUFFER_SIZE); 
 
     /* Server side will run forever to recieve client connections */
 	for(;;)
@@ -74,8 +75,8 @@ int main()
 		comm_sd = accept(listen_sd,(struct sockaddr*)NULL,NULL);
 
 		/* Accept Client Request and store request in tok*/
-		char buffer[30000] = {0};
-        valread = read(comm_sd ,buffer,30000);
+		char buffer[BUFFER_SIZE] = {0};
+        valread = read(comm_sd ,buffer,BUFFER_SIZE);
         printf("%s\n",buffer );   
         tok = strtok(buffer," ");
         tok = strtok(NULL," ");
@@ -101,8 +102,8 @@ int main()
 			else
 				html_data = fopen(tok,"r");
 			strcpy(html_header,"HTTP1.1 200 OK\r\n\r\n");
-			bzero(string_html,1024);
-			fgets(string_html,1024,html_data);
+			bzero(string_html,BUFFER_SIZE);
+			fgets(string_html,BUFFER_SIZE,html_data);
 			strcat(html_header,string_html);	
         }
         else if(strlen(tok) > 4 && tok[strlen(tok)-1] == 'l' && tok[strlen(tok)-2] == 'm' &&
@@ -111,11 +112,11 @@ int main()
         	FILE *html_data;
 			html_data = fopen("404.html","r");
         	strcpy(html_header,"HTTP1.1 404 Not Found\r\n\r\n");
-        	bzero(string_html,1024);
-			fgets(string_html,1024,html_data);
+        	bzero(string_html,BUFFER_SIZE);
+			fgets(string_html,BUFFER_SIZE,html_data);
 			strcat(html_header,string_html);
         }
-        bzero( buff, 2048);
+        bzero( buff, BUFFER_SIZE);
 		snprintf((char*)buff,sizeof(buff),"%s",html_header);
 		write(comm_sd,(char *)buff,strlen((char *)buff));
 		//send(comm_sd,html_header,sizeof(html_header),0);
